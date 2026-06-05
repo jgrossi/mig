@@ -76,6 +76,30 @@ class Migrator
         echo "[ROLLED BACK] $row\n";
     }
 
+    public function refresh(): void
+    {
+        $this->createMigrationsTable();
+
+        $applied = $this->pdo
+            ->query('SELECT filename FROM migrations ORDER BY applied_at DESC, filename DESC')
+            ->fetchAll(PDO::FETCH_COLUMN);
+
+        foreach ($applied as $filename) {
+            $file = rtrim($this->path, '/') . '/' . $filename;
+            if (!file_exists($file)) {
+                fwrite(STDERR, "Error: migration file not found: $file\n");
+                exit(1);
+            }
+            $sql = $this->parseSql(file_get_contents($file), 'down');
+            $this->pdo->exec($sql);
+            $stmt = $this->pdo->prepare('DELETE FROM migrations WHERE filename = ?');
+            $stmt->execute([$filename]);
+            echo "[DOWN] $filename\n";
+        }
+
+        $this->migrate();
+    }
+
     private function createMigrationsTable(): void
     {
         $this->pdo->exec('

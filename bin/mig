@@ -33,7 +33,22 @@ if (!file_exists($configFile)) {
     exit(1);
 }
 
-$config = require $configFile;
+$config  = require $configFile;
+$command = $argv[1] ?? null;
+$path    = $config['path'] ?? getcwd() . '/db/migrations';
+
+// --- create command (no DB connection needed) ---
+
+if ($command === 'create') {
+    $filename = date('YmdHis') . '.sql';
+    $file     = rtrim($path, '/') . '/' . $filename;
+    if (!is_dir($path)) {
+        mkdir($path, 0755, true);
+    }
+    file_put_contents($file, "-- mig:up\n\n\n-- mig:down\n\n");
+    echo "[CREATED] $filename\n";
+    exit(0);
+}
 
 // --- Build DSN ---
 
@@ -69,7 +84,6 @@ if (!empty($config['dsn'])) {
 
 $username = $config['username'] ?? null;
 $password = $config['password'] ?? null;
-$path     = $config['path'] ?? getcwd() . '/db/migrations';
 
 // --- Connect ---
 
@@ -83,19 +97,20 @@ try {
 
 // --- Dispatch command ---
 
-$command = $argv[1] ?? null;
-
 $migrator = new Migrator($pdo, $path);
 
 match ($command) {
-    'migrate'  => $migrator->migrate(),
-    'rollback' => $migrator->rollback(),
-    default    => (function () use ($argv) {
+    'up'      => $migrator->migrate(),
+    'down'    => $migrator->rollback(),
+    'refresh' => $migrator->refresh(),
+    default   => (function () use ($argv) {
         $bin = basename($argv[0]);
         fwrite(STDERR, "Usage: $bin <command>\n\n");
         fwrite(STDERR, "Commands:\n");
-        fwrite(STDERR, "  migrate    Apply all pending migrations\n");
-        fwrite(STDERR, "  rollback   Roll back the last applied migration\n");
+        fwrite(STDERR, "  create          Create a new migration file\n");
+        fwrite(STDERR, "  up              Apply all pending migrations\n");
+        fwrite(STDERR, "  down            Roll back the last applied migration\n");
+        fwrite(STDERR, "  refresh         Roll back all migrations and re-run them\n");
         exit(1);
     })(),
 };
