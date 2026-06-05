@@ -12,6 +12,7 @@ class Migrator
     public function __construct(
         private PDO $pdo,
         private string $path,
+        private string $table = 'migrations',
     ) {}
 
     public function migrate(): void
@@ -28,7 +29,7 @@ class Migrator
         sort($files);
 
         $applied = array_flip(
-            $this->pdo->query('SELECT filename FROM migrations')->fetchAll(PDO::FETCH_COLUMN)
+            $this->pdo->query("SELECT filename FROM {$this->table}")->fetchAll(PDO::FETCH_COLUMN)
         );
 
         foreach ($files as $file) {
@@ -39,7 +40,7 @@ class Migrator
             }
             $sql = $this->parseSql(file_get_contents($file), 'up');
             $this->pdo->exec($sql);
-            $stmt = $this->pdo->prepare('INSERT INTO migrations (filename, applied_at) VALUES (?, ?)');
+            $stmt = $this->pdo->prepare("INSERT INTO {$this->table} (filename, applied_at) VALUES (?, ?)");
             $stmt->execute([$name, date('Y-m-d H:i:s')]);
             echo "[OK]   $name\n";
         }
@@ -52,7 +53,7 @@ class Migrator
         $this->createMigrationsTable();
 
         $row = $this->pdo
-            ->query('SELECT filename FROM migrations ORDER BY applied_at DESC, filename DESC LIMIT 1')
+            ->query("SELECT filename FROM {$this->table} ORDER BY applied_at DESC, filename DESC LIMIT 1")
             ->fetch(PDO::FETCH_COLUMN);
 
         if (!$row) {
@@ -70,10 +71,10 @@ class Migrator
         $sql = $this->parseSql(file_get_contents($file), 'down');
         $this->pdo->exec($sql);
 
-        $stmt = $this->pdo->prepare('DELETE FROM migrations WHERE filename = ?');
+        $stmt = $this->pdo->prepare("DELETE FROM {$this->table} WHERE filename = ?");
         $stmt->execute([$row]);
 
-        echo "[ROLLED BACK] $row\n";
+        echo "[DOWN] $row\n";
     }
 
     public function refresh(): void
@@ -81,7 +82,7 @@ class Migrator
         $this->createMigrationsTable();
 
         $applied = $this->pdo
-            ->query('SELECT filename FROM migrations ORDER BY applied_at DESC, filename DESC')
+            ->query("SELECT filename FROM {$this->table} ORDER BY applied_at DESC, filename DESC")
             ->fetchAll(PDO::FETCH_COLUMN);
 
         foreach ($applied as $filename) {
@@ -92,7 +93,7 @@ class Migrator
             }
             $sql = $this->parseSql(file_get_contents($file), 'down');
             $this->pdo->exec($sql);
-            $stmt = $this->pdo->prepare('DELETE FROM migrations WHERE filename = ?');
+            $stmt = $this->pdo->prepare("DELETE FROM {$this->table} WHERE filename = ?");
             $stmt->execute([$filename]);
             echo "[DOWN] $filename\n";
         }
@@ -102,12 +103,12 @@ class Migrator
 
     private function createMigrationsTable(): void
     {
-        $this->pdo->exec('
-            CREATE TABLE IF NOT EXISTS migrations (
+        $this->pdo->exec("
+            CREATE TABLE IF NOT EXISTS {$this->table} (
                 filename   VARCHAR(255) PRIMARY KEY,
                 applied_at VARCHAR(30)  NOT NULL
             )
-        ');
+        ");
     }
 
     private function parseSql(string $content, string $direction): string

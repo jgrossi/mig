@@ -84,6 +84,7 @@ if (!empty($config['dsn'])) {
 
 $username = $config['username'] ?? null;
 $password = $config['password'] ?? null;
+$table    = $config['table'] ?? 'migrations';
 
 // --- Connect ---
 
@@ -97,7 +98,7 @@ try {
 
 // --- Dispatch command ---
 
-$migrator = new Migrator($pdo, $path);
+$migrator = new Migrator($pdo, $path, $table);
 
 match ($command) {
     'up'      => $migrator->migrate(),

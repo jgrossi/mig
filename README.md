@@ -24,6 +24,7 @@ return [
     'username' => 'root',
     'password' => 'secret',
     'path'     => __DIR__ . '/db/migrations',
+    'table'    => 'migrations', // optional, default: migrations
 ];
 ```
 
@@ -92,7 +93,7 @@ Rolls back the last applied migration.
 
 ```bash
 ./vendor/bin/mig down
-# [ROLLED BACK] 20260605143022.sql
+# [DOWN] 20260605143022.sql
 ```
 
 ### `mig refresh`
