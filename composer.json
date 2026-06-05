@@ -1,0 +1,14 @@
+{
+    "name": "jgrossi/mig",
+    "description": "Simple PHP database migration runner using PDO",
+    "license": "MIT",
+    "require": {
+        "php": ">=8.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Mig\\": "src/"
+        }
+    },
+    "bin": ["bin/mig"]
+}

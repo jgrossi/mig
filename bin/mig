@@ -1,0 +1,101 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+foreach ([
+    __DIR__ . '/../vendor/autoload.php',
+    __DIR__ . '/../../../autoload.php',
+] as $autoload) {
+    if (file_exists($autoload)) {
+        require $autoload;
+        break;
+    }
+}
+
+use Mig\Migrator;
+
+// --- Load config ---
+
+$configFile = getcwd() . '/mig.php';
+
+if (!file_exists($configFile)) {
+    fwrite(STDERR, "Error: mig.php not found in " . getcwd() . "\n\n");
+    fwrite(STDERR, "Create a mig.php file in your project root:\n\n");
+    fwrite(STDERR, "<?php\nreturn [\n");
+    fwrite(STDERR, "    'driver'   => 'mysql',\n");
+    fwrite(STDERR, "    'host'     => 'localhost',\n");
+    fwrite(STDERR, "    'dbname'   => 'myapp',\n");
+    fwrite(STDERR, "    'username' => 'root',\n");
+    fwrite(STDERR, "    'password' => 'secret',\n");
+    fwrite(STDERR, "    'path'     => __DIR__ . '/db/migrations',\n");
+    fwrite(STDERR, "];\n");
+    exit(1);
+}
+
+$config = require $configFile;
+
+// --- Build DSN ---
+
+if (!empty($config['dsn'])) {
+    $dsn = $config['dsn'];
+} else {
+    $driver = $config['driver'] ?? null;
+    if (!$driver) {
+        fwrite(STDERR, "Error: mig.php must define 'dsn' or 'driver'\n");
+        exit(1);
+    }
+    $dbname = $config['dbname'] ?? '';
+    $host   = $config['host'] ?? 'localhost';
+    $port   = $config['port'] ?? null;
+
+    $dsn = match (strtolower($driver)) {
+        'mysql'  => 'mysql:host=' . $host
+                    . ($port ? ';port=' . $port : '')
+                    . ';dbname=' . $dbname
+                    . ';charset=utf8mb4',
+        'pgsql'  => 'pgsql:host=' . $host
+                    . ($port ? ';port=' . $port : '')
+                    . ';dbname=' . $dbname,
+        'sqlite' => 'sqlite:' . $dbname,
+        default  => null,
+    };
+
+    if ($dsn === null) {
+        fwrite(STDERR, "Error: unsupported driver '$driver'. Use mysql, pgsql, or sqlite.\n");
+        exit(1);
+    }
+}
+
+$username = $config['username'] ?? null;
+$password = $config['password'] ?? null;
+$path     = $config['path'] ?? getcwd() . '/db/migrations';
+
+// --- Connect ---
+
+try {
+    $pdo = new PDO($dsn, $username, $password);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch (\PDOException $e) {
+    fwrite(STDERR, "Connection failed: " . $e->getMessage() . "\n");
+    exit(1);
+}
+
+// --- Dispatch command ---
+
+$command = $argv[1] ?? null;
+
+$migrator = new Migrator($pdo, $path);
+
+match ($command) {
+    'migrate'  => $migrator->migrate(),
+    'rollback' => $migrator->rollback(),
+    default    => (function () use ($argv) {
+        $bin = basename($argv[0]);
+        fwrite(STDERR, "Usage: $bin <command>\n\n");
+        fwrite(STDERR, "Commands:\n");
+        fwrite(STDERR, "  migrate    Apply all pending migrations\n");
+        fwrite(STDERR, "  rollback   Roll back the last applied migration\n");
+        exit(1);
+    })(),
+};
