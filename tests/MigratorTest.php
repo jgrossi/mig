@@ -34,7 +34,7 @@ class MigratorTest extends TestCase
     {
         file_put_contents(
             $this->path . '/' . $name,
-            "-- mig:up\n{$up}\n-- mig:down\n{$down}\n"
+            "-- mig:up\n{$up}\n-- mig:down\n{$down}\n",
         );
     }
 
@@ -71,7 +71,7 @@ class MigratorTest extends TestCase
         $this->writeMigration(
             '001_users.sql',
             'CREATE TABLE users (id INTEGER PRIMARY KEY)',
-            'DROP TABLE users'
+            'DROP TABLE users',
         );
 
         $this->migrate();
@@ -88,7 +88,7 @@ class MigratorTest extends TestCase
         $this->writeMigration(
             '001_users.sql',
             'CREATE TABLE users (id INTEGER PRIMARY KEY)',
-            'DROP TABLE users'
+            'DROP TABLE users',
         );
 
         $this->migrate();
@@ -104,12 +104,12 @@ class MigratorTest extends TestCase
         $this->writeMigration(
             '002_add_email.sql',
             'ALTER TABLE users ADD COLUMN email TEXT',
-            'SELECT 1'
+            'SELECT 1',
         );
         $this->writeMigration(
             '001_create_users.sql',
             'CREATE TABLE users (id INTEGER PRIMARY KEY)',
-            'DROP TABLE users'
+            'DROP TABLE users',
         );
 
         $this->migrate();
@@ -146,7 +146,7 @@ class MigratorTest extends TestCase
         $this->writeMigration(
             '001_users.sql',
             'CREATE TABLE users (id INTEGER PRIMARY KEY)',
-            'DROP TABLE users'
+            'DROP TABLE users',
         );
 
         $this->migrate('schema_migrations');
@@ -159,7 +159,7 @@ class MigratorTest extends TestCase
     {
         file_put_contents(
             $this->path . '/001_case.sql',
-            "-- MIG:UP\nCREATE TABLE items (id INTEGER PRIMARY KEY)\n-- MIG:DOWN\nDROP TABLE items\n"
+            "-- MIG:UP\nCREATE TABLE items (id INTEGER PRIMARY KEY)\n-- MIG:DOWN\nDROP TABLE items\n",
         );
 
         $this->migrate();
@@ -177,7 +177,7 @@ class MigratorTest extends TestCase
         $this->writeMigration(
             '001_users.sql',
             'CREATE TABLE users (id INTEGER PRIMARY KEY)',
-            'DROP TABLE users'
+            'DROP TABLE users',
         );
 
         $migrator = new Migrator($this->pdo, $this->path);
@@ -198,7 +198,7 @@ class MigratorTest extends TestCase
         $this->writeMigration(
             '001_users.sql',
             'CREATE TABLE users (id INTEGER PRIMARY KEY)',
-            'DROP TABLE users'
+            'DROP TABLE users',
         );
 
         $migrator = new Migrator($this->pdo, $this->path);
@@ -223,12 +223,12 @@ class MigratorTest extends TestCase
         $this->writeMigration(
             '001_users.sql',
             'CREATE TABLE users (id INTEGER PRIMARY KEY)',
-            'DROP TABLE users'
+            'DROP TABLE users',
         );
         $this->writeMigration(
             '002_posts.sql',
             'CREATE TABLE posts (id INTEGER PRIMARY KEY)',
-            'DROP TABLE posts'
+            'DROP TABLE posts',
         );
 
         $migrator = new Migrator($this->pdo, $this->path);
@@ -249,17 +249,17 @@ class MigratorTest extends TestCase
         $this->writeMigration(
             '001_users.sql',
             'CREATE TABLE users (id INTEGER PRIMARY KEY)',
-            'DROP TABLE users'
+            'DROP TABLE users',
         );
         $this->writeMigration(
             '002_posts.sql',
             'CREATE TABLE posts (id INTEGER PRIMARY KEY)',
-            'DROP TABLE posts'
+            'DROP TABLE posts',
         );
         $this->writeMigration(
             '003_comments.sql',
             'CREATE TABLE comments (id INTEGER PRIMARY KEY)',
-            'DROP TABLE comments'
+            'DROP TABLE comments',
         );
 
         $migrator = new Migrator($this->pdo, $this->path);
@@ -280,7 +280,7 @@ class MigratorTest extends TestCase
         $this->writeMigration(
             '001_users.sql',
             'CREATE TABLE users (id INTEGER PRIMARY KEY)',
-            'DROP TABLE users'
+            'DROP TABLE users',
         );
 
         $migrator = new Migrator($this->pdo, $this->path);
@@ -302,7 +302,7 @@ class MigratorTest extends TestCase
         $this->writeMigration(
             '001_users.sql',
             'CREATE TABLE users (id INTEGER PRIMARY KEY)',
-            'DROP TABLE users'
+            'DROP TABLE users',
         );
 
         $migrator = new Migrator($this->pdo, $this->path);
@@ -323,7 +323,7 @@ class MigratorTest extends TestCase
         $this->writeMigration(
             '001_users.sql',
             'CREATE TABLE users (id INTEGER PRIMARY KEY)',
-            'DROP TABLE users'
+            'DROP TABLE users',
         );
 
         $migrator = new Migrator($this->pdo, $this->path);
@@ -342,7 +342,7 @@ class MigratorTest extends TestCase
         $this->writeMigration(
             '001_users.sql',
             'CREATE TABLE users (id INTEGER PRIMARY KEY)',
-            'DROP TABLE users'
+            'DROP TABLE users',
         );
 
         $migrator = new Migrator($this->pdo, $this->path);
@@ -359,7 +359,7 @@ class MigratorTest extends TestCase
         $this->writeMigration(
             '001_users.sql',
             'CREATE TABLE users (id INTEGER PRIMARY KEY)',
-            'DROP TABLE users'
+            'DROP TABLE users',
         );
 
         $migrator = new Migrator($this->pdo, $this->path);
@@ -374,12 +374,12 @@ class MigratorTest extends TestCase
         $this->writeMigration(
             '001_users.sql',
             'CREATE TABLE users (id INTEGER PRIMARY KEY)',
-            'DROP TABLE users'
+            'DROP TABLE users',
         );
         $this->writeMigration(
             '002_posts.sql',
             'CREATE TABLE posts (id INTEGER PRIMARY KEY)',
-            'DROP TABLE posts'
+            'DROP TABLE posts',
         );
 
         $migrator = new Migrator($this->pdo, $this->path);
@@ -388,7 +388,7 @@ class MigratorTest extends TestCase
         $this->writeMigration(
             '003_comments.sql',
             'CREATE TABLE comments (id INTEGER PRIMARY KEY)',
-            'DROP TABLE comments'
+            'DROP TABLE comments',
         );
 
         $output = $this->capture(fn () => $migrator->status());
@@ -415,12 +415,12 @@ class MigratorTest extends TestCase
         $this->writeMigration(
             '001_users.sql',
             'CREATE TABLE users (id INTEGER PRIMARY KEY)',
-            'DROP TABLE users'
+            'DROP TABLE users',
         );
         $this->writeMigration(
             '002_posts.sql',
             'CREATE TABLE posts (id INTEGER PRIMARY KEY)',
-            'DROP TABLE posts'
+            'DROP TABLE posts',
         );
 
         $migrator = new Migrator($this->pdo, $this->path);
@@ -443,12 +443,12 @@ class MigratorTest extends TestCase
         $this->writeMigration(
             '001_users.sql',
             'CREATE TABLE users (id INTEGER PRIMARY KEY)',
-            'DROP TABLE users'
+            'DROP TABLE users',
         );
         $this->writeMigration(
             '002_posts.sql',
             'CREATE TABLE posts (id INTEGER PRIMARY KEY)',
-            'DROP TABLE posts'
+            'DROP TABLE posts',
         );
 
         $migrator = new Migrator($this->pdo, $this->path);
@@ -466,12 +466,12 @@ class MigratorTest extends TestCase
         $this->writeMigration(
             '001_users.sql',
             'CREATE TABLE users (id INTEGER PRIMARY KEY)',
-            'DROP TABLE users'
+            'DROP TABLE users',
         );
         $this->writeMigration(
             '002_posts.sql',
             'CREATE TABLE posts (id INTEGER PRIMARY KEY)',
-            'DROP TABLE posts'
+            'DROP TABLE posts',
         );
 
         $migrator = new Migrator($this->pdo, $this->path);
@@ -492,7 +492,7 @@ class MigratorTest extends TestCase
         $this->writeMigration(
             '001_users.sql',
             'CREATE TABLE users (id INTEGER PRIMARY KEY)',
-            'DROP TABLE users'
+            'DROP TABLE users',
         );
 
         $migrator = new Migrator($this->pdo, $this->path);
@@ -501,7 +501,7 @@ class MigratorTest extends TestCase
         $this->writeMigration(
             '002_posts.sql',
             'CREATE TABLE posts (id INTEGER PRIMARY KEY)',
-            'DROP TABLE posts'
+            'DROP TABLE posts',
         );
 
         $this->expectException(RuntimeException::class);
@@ -528,7 +528,7 @@ class MigratorTest extends TestCase
         $this->writeMigration(
             '001_users.sql',
             'CREATE TABLE users (id INTEGER PRIMARY KEY)',
-            'DROP TABLE users'
+            'DROP TABLE users',
         );
 
         $migrator = new Migrator($this->pdo, $this->path);
@@ -541,7 +541,7 @@ class MigratorTest extends TestCase
         $this->writeMigration(
             '002_posts.sql',
             'CREATE TABLE posts (id INTEGER PRIMARY KEY)',
-            'DROP TABLE posts'
+            'DROP TABLE posts',
         );
         $this->capture(fn () => $migrator->migrate());
 

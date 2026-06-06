@@ -30,7 +30,7 @@ class Migrator
         sort($files);
 
         $applied = array_flip(
-            $this->pdo->query("SELECT filename FROM {$this->table}")->fetchAll(PDO::FETCH_COLUMN)
+            $this->pdo->query("SELECT filename FROM {$this->table}")->fetchAll(PDO::FETCH_COLUMN),
         );
 
         foreach ($files as $file) {
