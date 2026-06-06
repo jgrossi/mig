@@ -6,6 +6,22 @@ on:
   pull_request:
 
 jobs:
+  cs-check:
+    runs-on: ubuntu-latest
+    name: CS Check
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          coverage: none
+
+      - run: composer install --no-progress --prefer-dist
+
+      - run: composer cs-check
+
   phpunit:
     runs-on: ubuntu-latest
 
