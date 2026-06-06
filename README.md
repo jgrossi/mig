@@ -1,5 +1,7 @@
 # jgrossi/mig
 
+[![Tests](https://github.com/jgrossi/mig/actions/workflows/tests.yml/badge.svg)](https://github.com/jgrossi/mig/actions/workflows/tests.yml)
+
 Simple PHP database migration runner using PDO. Works with MySQL, PostgreSQL, and SQLite.
 
 ## Installation
