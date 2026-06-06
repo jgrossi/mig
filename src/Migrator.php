@@ -13,7 +13,8 @@ class Migrator
         private PDO $pdo,
         private string $path,
         private string $table = 'migrations',
-    ) {}
+    ) {
+    }
 
     public function migrate(): void
     {
