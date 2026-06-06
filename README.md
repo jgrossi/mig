@@ -91,12 +91,43 @@ Applies all pending migrations in order, skipping any already applied.
 
 ### `mig down`
 
-Rolls back the last applied migration.
+Rolls back the last applied migration. Use `--steps=N` to roll back more than one.
 
 ```bash
 ./vendor/bin/mig down
+# [DOWN] 20260605143100.sql
+
+./vendor/bin/mig down --steps=3
+# [DOWN] 20260605143100.sql
 # [DOWN] 20260605143022.sql
+# [DOWN] 20260605142900.sql
 ```
+
+### `mig status`
+
+Shows all migration files and whether each has been applied.
+
+```bash
+./vendor/bin/mig status
+# Migration              Status    Applied At
+# -------------------------------------------------
+# 20260605143022.sql     Applied   2026-06-05 14:30:22
+# 20260605143100.sql     Applied   2026-06-05 14:31:00
+# 20260605150000.sql     Pending
+```
+
+### `mig squash`
+
+Collapses all applied migrations into a single `000_squash.sql` file and removes the originals. Useful for cleaning up history on established projects. Requires no pending migrations.
+
+```bash
+./vendor/bin/mig squash
+# [REMOVED] 20260605143022.sql
+# [REMOVED] 20260605143100.sql
+# [SQUASHED] 000_squash.sql
+```
+
+The squash file is prefixed with `000_` so it always sorts before future migrations, ensuring a correct apply order on fresh installs.
 
 ### `mig refresh`
 

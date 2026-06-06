@@ -86,6 +86,16 @@ $username = $config['username'] ?? null;
 $password = $config['password'] ?? null;
 $table    = $config['table'] ?? 'migrations';
 
+// --- Parse options ---
+
+$steps = 1;
+foreach (array_slice($argv, 2) as $arg) {
+    if (preg_match('/^--steps?=(\d+)$/', $arg, $m)) {
+        $steps = (int) $m[1];
+        break;
+    }
+}
+
 // --- Connect ---
 
 try {
@@ -102,16 +112,20 @@ $migrator = new Migrator($pdo, $path, $table);
 
 match ($command) {
     'up'      => $migrator->migrate(),
-    'down'    => $migrator->rollback(),
+    'down'    => $migrator->rollback($steps),
     'refresh' => $migrator->refresh(),
+    'status'  => $migrator->status(),
+    'squash'  => $migrator->squash(),
     default   => (function () use ($argv) {
         $bin = basename($argv[0]);
         fwrite(STDERR, "Usage: $bin <command>\n\n");
         fwrite(STDERR, "Commands:\n");
-        fwrite(STDERR, "  create          Create a new migration file\n");
-        fwrite(STDERR, "  up              Apply all pending migrations\n");
-        fwrite(STDERR, "  down            Roll back the last applied migration\n");
-        fwrite(STDERR, "  refresh         Roll back all migrations and re-run them\n");
+        fwrite(STDERR, "  create              Create a new migration file\n");
+        fwrite(STDERR, "  up                  Apply all pending migrations\n");
+        fwrite(STDERR, "  down [--steps=N]    Roll back the last N applied migrations (default: 1)\n");
+        fwrite(STDERR, "  refresh             Roll back all migrations and re-run them\n");
+        fwrite(STDERR, "  status              Show applied and pending migrations\n");
+        fwrite(STDERR, "  squash              Collapse all applied migrations into one file\n");
         exit(1);
     })(),
 };
