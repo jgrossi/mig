@@ -38,7 +38,7 @@ class MigratorTest extends TestCase
         );
     }
 
-    private function run(callable $fn): string
+    private function capture(callable $fn): string
     {
         ob_start();
         $fn();
@@ -51,7 +51,7 @@ class MigratorTest extends TestCase
             ? new Migrator($this->pdo, $this->path, $table)
             : new Migrator($this->pdo, $this->path);
 
-        return $this->run(fn() => $migrator->migrate());
+        return $this->capture(fn () => $migrator->migrate());
     }
 
     // -------------------------------------------------------------------
@@ -174,7 +174,7 @@ class MigratorTest extends TestCase
         );
 
         $migrator = new Migrator($this->pdo, $this->path);
-        $this->run(function () use ($migrator) {
+        $this->capture(function () use ($migrator) {
             $migrator->migrate();
             $migrator->rollback();
         });
@@ -194,9 +194,9 @@ class MigratorTest extends TestCase
         );
 
         $migrator = new Migrator($this->pdo, $this->path);
-        $this->run(fn() => $migrator->migrate());
+        $this->capture(fn() => $migrator->migrate());
 
-        $output = $this->run(fn() => $migrator->rollback());
+        $output = $this->capture(fn() => $migrator->rollback());
 
         $this->assertStringContainsString('[DOWN]', $output);
         $this->assertStringContainsString('001_users.sql', $output);
@@ -205,7 +205,7 @@ class MigratorTest extends TestCase
     public function test_rollback_does_nothing_when_empty(): void
     {
         $migrator = new Migrator($this->pdo, $this->path);
-        $output = $this->run(fn() => $migrator->rollback());
+        $output = $this->capture(fn() => $migrator->rollback());
 
         $this->assertStringContainsString('Nothing to roll back', $output);
     }
@@ -222,7 +222,7 @@ class MigratorTest extends TestCase
         );
 
         $migrator = new Migrator($this->pdo, $this->path);
-        $this->run(function () use ($migrator) {
+        $this->capture(function () use ($migrator) {
             $migrator->migrate();
             $migrator->rollback();
         });
@@ -250,7 +250,7 @@ class MigratorTest extends TestCase
         );
 
         $migrator = new Migrator($this->pdo, $this->path);
-        $this->run(function () use ($migrator) {
+        $this->capture(function () use ($migrator) {
             $migrator->migrate();
             $migrator->rollback(2);
         });
@@ -270,7 +270,7 @@ class MigratorTest extends TestCase
         );
 
         $migrator = new Migrator($this->pdo, $this->path);
-        $this->run(function () use ($migrator) {
+        $this->capture(function () use ($migrator) {
             $migrator->migrate();
             $migrator->rollback(99);
         });
@@ -291,7 +291,7 @@ class MigratorTest extends TestCase
         );
 
         $migrator = new Migrator($this->pdo, $this->path);
-        $this->run(function () use ($migrator) {
+        $this->capture(function () use ($migrator) {
             $migrator->migrate();
             $migrator->refresh();
         });
@@ -311,7 +311,7 @@ class MigratorTest extends TestCase
         );
 
         $migrator = new Migrator($this->pdo, $this->path);
-        $this->run(fn() => $migrator->refresh());
+        $this->capture(fn() => $migrator->refresh());
 
         $count = (int) $this->pdo->query("SELECT COUNT(*) FROM migrations")->fetchColumn();
         $this->assertSame(1, $count);
@@ -329,9 +329,9 @@ class MigratorTest extends TestCase
         );
 
         $migrator = new Migrator($this->pdo, $this->path);
-        $this->run(fn() => $migrator->migrate());
+        $this->capture(fn() => $migrator->migrate());
 
-        $output = $this->run(fn() => $migrator->status());
+        $output = $this->capture(fn() => $migrator->status());
 
         $this->assertStringContainsString('001_users.sql', $output);
         $this->assertStringContainsString('Applied', $output);
@@ -345,7 +345,7 @@ class MigratorTest extends TestCase
         );
 
         $migrator = new Migrator($this->pdo, $this->path);
-        $output = $this->run(fn() => $migrator->status());
+        $output = $this->capture(fn() => $migrator->status());
 
         $this->assertStringContainsString('001_users.sql', $output);
         $this->assertStringContainsString('Pending', $output);
@@ -363,14 +363,14 @@ class MigratorTest extends TestCase
         );
 
         $migrator = new Migrator($this->pdo, $this->path);
-        $this->run(fn() => $migrator->migrate());
+        $this->capture(fn() => $migrator->migrate());
 
         $this->writeMigration('003_comments.sql',
             'CREATE TABLE comments (id INTEGER PRIMARY KEY)',
             'DROP TABLE comments'
         );
 
-        $output = $this->run(fn() => $migrator->status());
+        $output = $this->capture(fn() => $migrator->status());
 
         $this->assertStringContainsString('Applied', $output);
         $this->assertStringContainsString('Pending', $output);
@@ -380,7 +380,7 @@ class MigratorTest extends TestCase
     public function test_status_shows_no_migrations_message(): void
     {
         $migrator = new Migrator($this->pdo, $this->path);
-        $output = $this->run(fn() => $migrator->status());
+        $output = $this->capture(fn() => $migrator->status());
 
         $this->assertStringContainsString('No migrations found', $output);
     }
@@ -401,7 +401,7 @@ class MigratorTest extends TestCase
         );
 
         $migrator = new Migrator($this->pdo, $this->path);
-        $this->run(function () use ($migrator) {
+        $this->capture(function () use ($migrator) {
             $migrator->migrate();
             $migrator->squash();
         });
@@ -427,7 +427,7 @@ class MigratorTest extends TestCase
         );
 
         $migrator = new Migrator($this->pdo, $this->path);
-        $this->run(function () use ($migrator) {
+        $this->capture(function () use ($migrator) {
             $migrator->migrate();
             $migrator->squash();
         });
@@ -448,7 +448,7 @@ class MigratorTest extends TestCase
         );
 
         $migrator = new Migrator($this->pdo, $this->path);
-        $this->run(function () use ($migrator) {
+        $this->capture(function () use ($migrator) {
             $migrator->migrate();
             $migrator->squash();
         });
@@ -468,7 +468,7 @@ class MigratorTest extends TestCase
         );
 
         $migrator = new Migrator($this->pdo, $this->path);
-        $this->run(fn() => $migrator->migrate());
+        $this->capture(fn() => $migrator->migrate());
 
         $this->writeMigration('002_posts.sql',
             'CREATE TABLE posts (id INTEGER PRIMARY KEY)',
@@ -489,7 +489,7 @@ class MigratorTest extends TestCase
     public function test_squash_does_nothing_when_empty(): void
     {
         $migrator = new Migrator($this->pdo, $this->path);
-        $output = $this->run(fn() => $migrator->squash());
+        $output = $this->capture(fn() => $migrator->squash());
 
         $this->assertStringContainsString('Nothing to squash', $output);
     }
@@ -502,7 +502,7 @@ class MigratorTest extends TestCase
         );
 
         $migrator = new Migrator($this->pdo, $this->path);
-        $this->run(function () use ($migrator) {
+        $this->capture(function () use ($migrator) {
             $migrator->migrate();
             $migrator->squash();
         });
@@ -512,10 +512,10 @@ class MigratorTest extends TestCase
             'CREATE TABLE posts (id INTEGER PRIMARY KEY)',
             'DROP TABLE posts'
         );
-        $this->run(fn() => $migrator->migrate());
+        $this->capture(fn() => $migrator->migrate());
 
         // Squash again
-        $this->run(fn() => $migrator->squash());
+        $this->capture(fn() => $migrator->squash());
 
         $squashFile = $this->path . '/000_squash.sql';
         $this->assertFileExists($squashFile);
