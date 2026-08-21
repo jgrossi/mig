@@ -20,6 +20,17 @@ composer test      # run PHPUnit
 composer check     # cs-fix + test
 ```
 
+## Docker
+
+Run tests without a local PHP install:
+
+```bash
+docker compose -f docker/docker-compose.yml run --rm test              # PHP 8.3
+PHP_VERSION=8.1 docker compose -f docker/docker-compose.yml run --rm test
+```
+
+Runs `composer test` (PHPUnit) inside the container; source is bind-mounted, `vendor` lives in a named volume.
+
 ## How it works
 
 - Each migration is a `.sql` file with `-- mig:up` and `-- mig:down` sections
@@ -44,6 +55,15 @@ composer check     # cs-fix + test
 ## Code style
 
 PHP CS Fixer with `@PSR12` + trailing commas on all multi-line calls/arrays/params, `declare_strict_types`, short array syntax, sorted imports. Run `composer cs-fix` before committing.
+
+## Commits
+
+Commit messages: `fix|feat|chore: description`, description max 5 words.
+
+## Pull Requests
+
+- Title follows the same commit format: `fix|feat|chore: description`, description max 5 words.
+- Body as short as possible.
 
 ## Tests
 
