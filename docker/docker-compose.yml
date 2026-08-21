@@ -1,0 +1,15 @@
+services:
+  test:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      args:
+        PHP_VERSION: ${PHP_VERSION:-8.3}
+    working_dir: /app
+    volumes:
+      - ../:/app
+      - vendor:/app/vendor
+    command: composer test
+
+volumes:
+  vendor:
