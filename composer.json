@@ -2,7 +2,7 @@
     "name": "jgrossi/mig",
     "description": "Simple PHP database migration runner using PDO",
     "license": "MIT",
-    "version": "0.3.1",
+    "version": "0.3.2",
     "require": {
         "php": ">=8.0"
     },
