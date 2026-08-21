@@ -13,9 +13,16 @@ foreach ([
     }
 }
 
-use Mig\Migrator;
+use Mig\Command\Create;
+use Mig\Command\Down;
+use Mig\Command\Refresh;
+use Mig\Command\Status;
+use Mig\Command\Squash;
+use Mig\Command\Up;
+use Mig\MigrationFiles;
+use Mig\MigrationStore;
 
-// --- Load config ---
+// --- load config ---
 
 $configFile = getcwd() . '/mig.php';
 
@@ -36,21 +43,43 @@ if (!file_exists($configFile)) {
 $config  = require $configFile;
 $command = $argv[1] ?? null;
 $path    = $config['path'] ?? getcwd() . '/db/migrations';
+$files   = new MigrationFiles($path);
 
-// --- create command (no DB connection needed) ---
+// --- parse options ---
+
+$steps = 1;
+foreach (array_slice($argv, 2) as $arg) {
+    if (preg_match('/^--steps?=(\d+)$/', $arg, $m)) {
+        $steps = (int) $m[1];
+        break;
+    }
+}
+
+$usage = function () use ($argv): void {
+    $bin = basename($argv[0]);
+    fwrite(STDERR, "Usage: $bin <command>\n\n");
+    fwrite(STDERR, "Commands:\n");
+    fwrite(STDERR, "  create              Create a new migration file\n");
+    fwrite(STDERR, "  up                  Apply all pending migrations\n");
+    fwrite(STDERR, "  down [--steps=N]    Roll back the last N applied migrations (default: 1)\n");
+    fwrite(STDERR, "  refresh             Roll back all migrations and re-run them\n");
+    fwrite(STDERR, "  status              Show applied and pending migrations\n");
+    fwrite(STDERR, "  squash              Collapse all applied migrations into one file\n");
+    exit(1);
+};
+
+// --- create (no DB needed) ---
 
 if ($command === 'create') {
-    $filename = date('YmdHis') . '.sql';
-    $file     = rtrim($path, '/') . '/' . $filename;
-    if (!is_dir($path)) {
-        mkdir($path, 0755, true);
-    }
-    file_put_contents($file, "-- mig:up\n\n\n-- mig:down\n\n");
-    echo "[CREATED] $filename\n";
+    (new Create($files))->run();
     exit(0);
 }
 
-// --- Build DSN ---
+if (!in_array($command, ['up', 'down', 'refresh', 'status', 'squash'], true)) {
+    $usage();
+}
+
+// --- build DSN ---
 
 if (!empty($config['dsn'])) {
     $dsn = $config['dsn'];
@@ -86,46 +115,30 @@ $username = $config['username'] ?? null;
 $password = $config['password'] ?? null;
 $table    = $config['table'] ?? 'migrations';
 
-// --- Parse options ---
-
-$steps = 1;
-foreach (array_slice($argv, 2) as $arg) {
-    if (preg_match('/^--steps?=(\d+)$/', $arg, $m)) {
-        $steps = (int) $m[1];
-        break;
-    }
-}
-
-// --- Connect ---
+// --- connect ---
 
 try {
     $pdo = new PDO($dsn, $username, $password);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-} catch (\PDOException $e) {
-    fwrite(STDERR, "Connection failed: " . $e->getMessage() . "\n");
+} catch (PDOException $e) {
+    fwrite(STDERR, 'Connection failed: ' . $e->getMessage() . "\n");
     exit(1);
 }
 
-// --- Dispatch command ---
+// --- dispatch command ---
 
-$migrator = new Migrator($pdo, $path, $table);
+$store    = new MigrationStore($pdo, $table);
+$commands = [
+    'up'      => fn () => new Up($pdo, $store, $files),
+    'down'    => fn () => new Down($pdo, $store, $files, $steps),
+    'refresh' => fn () => new Refresh(new Down($pdo, $store, $files), new Up($pdo, $store, $files)),
+    'status'  => fn () => new Status($store, $files),
+    'squash'  => fn () => new Squash($store, $files),
+];
 
-match ($command) {
-    'up'      => $migrator->migrate(),
-    'down'    => $migrator->rollback($steps),
-    'refresh' => $migrator->refresh(),
-    'status'  => $migrator->status(),
-    'squash'  => $migrator->squash(),
-    default   => (function () use ($argv) {
-        $bin = basename($argv[0]);
-        fwrite(STDERR, "Usage: $bin <command>\n\n");
-        fwrite(STDERR, "Commands:\n");
-        fwrite(STDERR, "  create              Create a new migration file\n");
-        fwrite(STDERR, "  up                  Apply all pending migrations\n");
-        fwrite(STDERR, "  down [--steps=N]    Roll back the last N applied migrations (default: 1)\n");
-        fwrite(STDERR, "  refresh             Roll back all migrations and re-run them\n");
-        fwrite(STDERR, "  status              Show applied and pending migrations\n");
-        fwrite(STDERR, "  squash              Collapse all applied migrations into one file\n");
-        exit(1);
-    })(),
-};
+try {
+    $commands[$command]()->run();
+} catch (RuntimeException $e) {
+    fwrite(STDERR, 'Error: ' . $e->getMessage() . "\n");
+    exit(1);
+}

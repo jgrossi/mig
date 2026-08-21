@@ -5,10 +5,13 @@ A minimal PHP database migration runner using PDO. No framework dependencies.
 ## Structure
 
 ```
-bin/mig          CLI entry point
-src/Migrator.php Single class with all migration logic
-tests/           PHPUnit tests (SQLite in-memory, no real DB needed)
-.php-cs-fixer.php Code style config
+bin/mig                CLI entry point (config, DSN, dispatch)
+src/Command/           One class per CLI command
+src/MigrationStore.php Applied-migrations tracking table
+src/MigrationFiles.php Migration file discovery and IO
+src/SqlParser.php      -- mig:up/down section parser
+tests/                 PHPUnit tests (SQLite in-memory, no real DB needed)
+.php-cs-fixer.php      Code style config
 ```
 
 ## Commands
@@ -44,15 +47,20 @@ Runs `composer test` (PHPUnit) inside the container; source is bind-mounted, `ve
 - Files are sorted alphabetically before running — naming convention matters
 - Squash output is always named `000_squash.sql` so it sorts before future migrations
 
-## Migrator public API
+## Command classes
 
-| Method | Description |
+Each command in `src/Command/` implements `Command` (`run(): void`) and is constructed by `bin/mig` with its dependencies:
+
+| Class | Description |
 |---|---|
-| `migrate()` | Apply all pending migrations |
-| `rollback(int $steps = 1)` | Roll back the last N applied migrations |
-| `refresh()` | Roll back all, then re-apply all |
-| `status()` | Print applied/pending table |
-| `squash()` | Collapse all applied into `000_squash.sql`; throws `RuntimeException` if pending migrations exist |
+| `Command\Create` | Create a timestamped stub migration file |
+| `Command\Up` | Apply all pending migrations |
+| `Command\Down` | Roll back the last N applied (`$steps` constructor arg); `runAll()` rolls back everything |
+| `Command\Refresh` | Roll back all, then re-apply all |
+| `Command\Status` | Print applied/pending table |
+| `Command\Squash` | Collapse all applied into `000_squash.sql`; throws `RuntimeException` if pending migrations exist |
+
+Shared collaborators: `MigrationStore` (tracking table: `applied()`, `latest()`, `add()`, `remove()`, `clear()`), `MigrationFiles` (sorted `*.sql` discovery, `read`/`write`/`delete`), `SqlParser` (splits `-- mig:up` / `-- mig:down` sections).
 
 ## CLI commands
 
@@ -61,6 +69,8 @@ Runs `composer test` (PHPUnit) inside the container; source is bind-mounted, `ve
 ## Code style
 
 PHP CS Fixer with `@PSR12` + trailing commas on all multi-line calls/arrays/params, `declare_strict_types`, short array syntax, sorted imports. Run `composer cs-fix` before committing.
+
+Comments: as short as possible, always starting lowercase.
 
 ## Commits
 
@@ -79,5 +89,5 @@ Automated by release-please (`.github/workflows/release-please.yml`). PR titles 
 
 - All tests use `PDO('sqlite::memory:')` — no database setup needed
 - Migration files are written to a `sys_get_temp_dir()` directory created per test and cleaned up in `tearDown`
-- Output is captured with the `capture(callable)` helper (named to avoid conflict with PHPUnit's `final run()`)
+- Output is captured with the `capture(callable)` helper on the shared `tests/TestCase.php` base class; command tests live in `tests/Command/`, one test class per command
 - PHPUnit 10.5, requires PHP 8.1+
