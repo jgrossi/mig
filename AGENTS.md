@@ -71,6 +71,10 @@ Commit messages: `fix|feat|chore: description`, description max 5 words.
 - Title follows the same commit format: `fix|feat|chore: description`, description max 5 words.
 - Body as short as possible.
 
+## Releases
+
+Automated by release-please (`.github/workflows/release-please.yml`). PR titles drive semver: `feat:` bumps minor, `fix:` bumps patch, `chore:` is ignored. On merge to `main`, release-please opens a `chore(main): release X.Y.Z` PR (bumps `composer.json`, updates `CHANGELOG.md`, `.release-please-manifest.json`); merging it tags and creates the GitHub release. Tags have no `v` prefix.
+
 ## Tests
 
 - All tests use `PDO('sqlite::memory:')` — no database setup needed
