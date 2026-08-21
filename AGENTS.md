@@ -22,12 +22,18 @@ composer check     # cs-fix + test
 
 ## Docker
 
-Run tests without a local PHP install:
+Run tests without a local PHP install, via the Makefile:
 
 ```bash
-docker compose -f docker/docker-compose.yml run --rm test              # PHP 8.3
-PHP_VERSION=8.1 docker compose -f docker/docker-compose.yml run --rm test
+make test                    # PHPUnit on PHP 8.3
+make test PHP_VERSION=8.1    # PHPUnit on PHP 8.1
+make cs-fix / cs-check / check
+make run c="php -v"          # arbitrary command in the container
+make shell                   # bash in the container
+make clean                   # remove containers + vendor volume
 ```
+
+Under the hood: `docker compose -f docker/docker-compose.yml run --rm --build test`.
 
 Runs `composer test` (PHPUnit) inside the container; source is bind-mounted, `vendor` lives in a named volume.
 
