@@ -2,7 +2,7 @@
     "name": "jgrossi/mig",
     "description": "Simple PHP database migration runner using PDO",
     "license": "MIT",
-    "version": "0.3.0",
+    "version": "0.3.1",
     "require": {
         "php": ">=8.0"
     },
@@ -20,7 +20,9 @@
             "Mig\\Tests\\": "tests/"
         }
     },
-    "bin": ["bin/mig"],
+    "bin": [
+        "bin/mig"
+    ],
     "scripts": {
         "cs-fix": "php-cs-fixer fix",
         "cs-check": "php-cs-fixer fix --dry-run --diff",
